@@ -11,6 +11,8 @@ from telebot import types
 from telegram import Bot
 from telegram import Update
 from telegram import Chat
+from telegram import InlineKeyboardButton
+from telegram import InlineKeyboardMarkup
 from telegram import ReplyKeyboardRemove
 from telegram import ReplyKeyboardMarkup
 from telegram import ChatPermissions
@@ -74,7 +76,156 @@ def debug_requests(f):
 
 
 
-# # message repeating
+
+
+# # buttons
+CALLBACK_BUTTON0_BACK = "callback_button0_back"
+CALLBACK_BUTTON1_AUTHORIZATION = "callback_button1_authorization"
+CALLBACK_BUTTON2_NEW_REQUEST = "callback_button2_new_request"
+CALLBACK_BUTTON3_RATE = "callback_button3_rate"
+CALLBACK_BUTTON4_BALANCE = "callback_button4_balance"
+CALLBACK_BUTTON5_SETTINGS = "callback_button5_settings"
+
+TITLES = {
+    CALLBACK_BUTTON0_BACK: "Back ⬅️",
+    CALLBACK_BUTTON1_AUTHORIZATION: "Banks authorization 🔄",
+    CALLBACK_BUTTON2_NEW_REQUEST: "New request ✅",
+    CALLBACK_BUTTON3_RATE: "Exchange rates 📉",
+    CALLBACK_BUTTON4_BALANCE: "Balance 💰",
+    CALLBACK_BUTTON5_SETTINGS: "Settings ⚙",
+}
+
+
+
+
+
+# keyboards
+# first keyboard under messages
+def get_base_inline_keyboard():
+    # получить клавиатуру, она будет видна под каждым сообщением
+    keyboard = [
+        #каждый элемент внутри этого списка - один вертикальный столбец. сколько кнопок - столько столбцов
+        [
+            InlineKeyboardButton(TITLES[CALLBACK_BUTTON1_AUTHORIZATION], callback_data=CALLBACK_BUTTON1_AUTHORIZATION),
+        ],
+        [
+            InlineKeyboardButton(TITLES[CALLBACK_BUTTON2_NEW_REQUEST], callback_data=CALLBACK_BUTTON2_NEW_REQUEST),
+        ],
+        [
+            InlineKeyboardButton(TITLES[CALLBACK_BUTTON3_RATE], callback_data=CALLBACK_BUTTON3_RATE),
+        ],
+        [
+            InlineKeyboardButton(TITLES[CALLBACK_BUTTON4_BALANCE], callback_data=CALLBACK_BUTTON4_BALANCE),
+        ],
+        [
+            InlineKeyboardButton(TITLES[CALLBACK_BUTTON5_SETTINGS], callback_data=CALLBACK_BUTTON5_SETTINGS),
+        ],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+# second keyboard under messages
+def get_base_inline_keyboard_back():
+    # получить клавиатуру, она будет видна под каждым сообщением
+    keyboard = [
+        #каждый элемент внутри этого списка - один вертикальный столбец. сколько кнопок - столько столбцов
+        [
+            InlineKeyboardButton(TITLES[CALLBACK_BUTTON0_BACK], callback_data=CALLBACK_BUTTON0_BACK),
+        ],
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+# functions for click on each button from keyboard
+# @debug_requests
+def keyboard_callback_handler(bot:Bot, update:Update, chat_data=None, **kwargs):
+    query = update.callback_query
+    data = query.data
+    # now = datetime.datetime.now()
+
+    # current_text = update.effective_message.text
+
+    if data == CALLBACK_BUTTON0_BACK:
+        reply_text = "Welcome to help page!\n\nIn case you have problems, you always can use /help to find an answer to your problem. To continue, from the list below please select the topic of your problem: "
+        bot.send_message(
+            chat_id=update.effective_message.chat_id,
+            text = reply_text,
+            reply_markup=get_base_inline_keyboard(),
+        )
+    
+    elif data == CALLBACK_BUTTON1_AUTHORIZATION:
+        reply_text = "Authorization in banks 🔄:\n\nTo get start using banks services, you should add to bot your token.\n\nFirst of all, you should go to Monobank (https://api.monobank.ua/) or Privat24 (https://api.privatbank.ua/), depends on your needs. After that, from the begining  menu (you can stop and restart bot), you go to Monobank or Privat24. There you will also see the instructions of using. Your should send the next message for Monobank or Privat24:\n\nMonobank token: (token)\nPrivat24 token: (token)\n\n(token) - instead of this you put your own token. "
+        bot.send_message(
+            chat_id=update.effective_message.chat_id,
+            text = reply_text,
+            reply_markup=get_base_inline_keyboard_back(),
+        )
+
+    elif data == CALLBACK_BUTTON2_NEW_REQUEST:
+        reply_text = "Creating a new request ✅:\n\nTo create a new request you should go to 'main menu' > 'new request'.\nCreating a new request you can for each bank separately, or for both together. You will receive the information about your incomes, expencss and balance."
+        bot.send_message(
+            chat_id=update.effective_message.chat_id,
+            text = reply_text,
+            reply_markup=get_base_inline_keyboard_back(),
+        )
+
+    elif data == CALLBACK_BUTTON3_RATE:
+        reply_text = "Exchange rates 📉:\n\nTo get the latest information about exchange rates, you should go to 'main menu' > 'exchange rates'."
+        bot.send_message(
+            chat_id=update.effective_message.chat_id,
+            text = reply_text,
+            reply_markup=get_base_inline_keyboard_back(),
+        )
+
+    elif data == CALLBACK_BUTTON4_BALANCE:
+        reply_text = "Getting the balance 💰:\n\nTo get the latest information about your balances, you should go to 'main menu' > 'balance'."
+        bot.send_message(
+            chat_id=update.effective_message.chat_id,
+            text = reply_text,
+            reply_markup=get_base_inline_keyboard_back(),
+        )
+
+    elif data == CALLBACK_BUTTON5_SETTINGS:
+        reply_text = "Settings for bot ⚙:\n\nTo change the information about your bank account, you should go to 'main menu' > 'settings'."
+        bot.send_message(
+            chat_id=update.effective_message.chat_id,
+            text = reply_text,
+            reply_markup=get_base_inline_keyboard_back(),
+        )
+
+
+
+
+
+# functions
+# start
+@debug_requests
+def do_start(bot:Bot, update:Update):
+    user = update.effective_user
+    if user: 
+        name = user.first_name
+    else:
+        name = 'Anonim'
+
+    reply_text = f'Hello, {name}!\n\nTo get started, you need to log in to banks such as Monobank and Privat24. For authorization you need to enter your X-Token for each bank.\nIf you want to continue working without authorization, click on the button "Log in without authorization 💎".\n\nIn case you have problems, to get help you can use /help'
+
+    bot.send_message(
+        chat_id=update.message.chat_id,
+        text=reply_text,
+        reply_markup=get_base_reply_keyboard(),
+    )
+
+# help 
+@debug_requests 
+def do_help(bot:Bot, update:Update):
+    reply_text = "Welcome to help page!\n\nIn case you have problems, you always can use /help to find an answer to your problem. To continue, from the list below please select the topic of your problem: "
+    bot.send_message(
+        chat_id=update.effective_message.chat_id,
+        text = reply_text,
+        reply_markup=get_base_inline_keyboard(),
+    )
+    print('nu typa rabotaet')
+
+
+# message repeating
 @debug_requests
 @run_async
 def do_echo(bot: Bot, update: Update):
@@ -345,9 +496,18 @@ def main():
         bot = bot, 
     )
 
+
+    start_handler = CommandHandler("start", do_start)
+    help_handler = CommandHandler("help", do_help)
+    # mes_handler = CommandHandler("mes", do_mes)
     message_handler = MessageHandler(Filters.text, do_echo)
-    
+    buttons_handler = CallbackQueryHandler(callback=keyboard_callback_handler, pass_chat_data=True)
+
+    updater.dispatcher.add_handler(start_handler)
+    updater.dispatcher.add_handler(help_handler)
+    # updater.dispatcher.add_handler(mes_handler)
     updater.dispatcher.add_handler(message_handler)
+    updater.dispatcher.add_handler(buttons_handler)
  
     updater.start_polling()
     updater.idle()
