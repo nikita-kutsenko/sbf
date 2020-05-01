@@ -59,9 +59,24 @@ bot = telebot.TeleBot(token)
 logger = getLogger(__name__)
 
 
+def debug_requests(f):
+    # decorator for requests
+    def inner(*args, **kwargs):
+        try:
+            logger.error(args)
+            logger.error(kwargs)
+            logger.info("Обращение в функцию {}".format(f.__name__))
+            return f(*args, **kwargs)
+        except Exception:
+            logger.exception("Ошибка в обработчике {}".format(f.__name__))
+            raise 
+    return inner
+
 
 
 # # message repeating
+@debug_requests
+@run_async
 def do_echo(bot: Bot, update: Update):
     # chat_id = update.message.chat_id
     text = update.effective_message.text
@@ -320,7 +335,7 @@ def do_echo(bot: Bot, update: Update):
 
 
 # bot body
-# @debug_requests
+@debug_requests
 def main():
     print('Start')
     bot = Bot (
@@ -331,8 +346,9 @@ def main():
     )
 
     message_handler = MessageHandler(Filters.text, do_echo)
-    updater.dispatcher.add_handler(message_handler)
     
+    updater.dispatcher.add_handler(message_handler)
+ 
     updater.start_polling()
     updater.idle()
     print('Finish')
